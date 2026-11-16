@@ -42,14 +42,14 @@ imprime en la consola del servidor.
 
 ```
 src/
-├─ app/                  # Rutas (layout, landing, solicitud, seguimiento, privacidad)
+├─ app/                  # Páginas (landing, solicitud, seguimiento, privacidad)
+│  └─ api/               # Rutas de servidor (solicitudes, seguimiento, admin)
 ├─ components/
 │  ├─ layout/            # Header, Footer, Logo
 │  ├─ landing/           # Hero, Services, Custody, Confidentiality, Faq, CallToAction
 │  ├─ wizard/            # RequestWizard + pasos, StepIndicator, OptionCard, Field
 │  ├─ tracking/          # TrackingPanel, StatusTimeline
 │  └─ ui/                # Button, Container, Icons
-│  └─ api/               # Rutas de servidor (solicitudes, seguimiento, admin)
 └─ lib/                  # types, services (contenido), folio, tracking, validation
    └─ server/            # crypto, db, access (códigos/sesión), rate-limit, email
 db/schema.sql            # Esquema PostgreSQL
