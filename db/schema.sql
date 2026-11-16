@@ -47,3 +47,14 @@ create table if not exists limites (
 alter table solicitudes    enable row level security;
 alter table codigos_acceso enable row level security;
 alter table limites        enable row level security;
+
+-- Usuario exclusivo de la app (opcional, recomendado). Créelo una vez, a mano,
+-- con su propia contraseña, y úselo en DATABASE_USER / DATABASE_PASSWORD:
+--
+--   create role gencerteza_app login password '...';
+--   grant usage on schema public to gencerteza_app;
+--   grant select, insert, update, delete
+--     on solicitudes, codigos_acceso, limites to gencerteza_app;
+--   create policy app_acceso on solicitudes    for all to gencerteza_app using (true) with check (true);
+--   create policy app_acceso on codigos_acceso for all to gencerteza_app using (true) with check (true);
+--   create policy app_acceso on limites        for all to gencerteza_app using (true) with check (true);
