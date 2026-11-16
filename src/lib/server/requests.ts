@@ -1,5 +1,6 @@
 import "server-only";
 import { randomInt } from "node:crypto";
+import { LEGAL } from "@/lib/legal";
 import { TRACKING_STAGES } from "@/lib/tracking";
 import type {
   ContactData,
@@ -43,11 +44,15 @@ export async function createRequest(
   for (let attempt = 0; attempt < 8; attempt++) {
     const folio = newFolio();
     const inserted = await sql`
-      insert into solicitudes (folio, servicio, variante, modalidad, contacto_cifrado, fechas_etapas)
+      insert into solicitudes (
+        folio, servicio, variante, modalidad, contacto_cifrado, fechas_etapas,
+        aviso_version, consentimiento_en
+      )
       values (
         ${folio}, ${service}, ${variant}, ${modality},
         ${encrypt(JSON.stringify(contact), folio)},
-        ${sql.json([new Date().toISOString()])}
+        ${sql.json([new Date().toISOString()])},
+        ${LEGAL.version}, now()
       )
       on conflict (folio) do nothing
       returning folio

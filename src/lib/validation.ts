@@ -47,7 +47,10 @@ export function validateRequest(
   if (contact.notes.length > MAX.notes)
     errors.notes = "Las indicaciones no pueden exceder 600 caracteres.";
   if (!contact.consent)
-    errors.consent = "Debe aceptar para continuar con la solicitud.";
+    errors.consent =
+      "Para continuar debe aceptar el aviso de privacidad y el tratamiento de sus datos.";
+  if (!contact.legitimacy)
+    errors.legitimacy = "Para continuar debe confirmar esta declaración.";
   return errors;
 }
 

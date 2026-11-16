@@ -30,6 +30,7 @@ const EMPTY_CONTACT: ContactData = {
   preferredDate: "",
   notes: "",
   consent: false,
+  legitimacy: false,
 };
 
 /** Variante de la URL si es válida; si el servicio solo tiene una, esa. */

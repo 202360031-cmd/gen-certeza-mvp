@@ -22,6 +22,11 @@ alter table solicitudes drop constraint if exists solicitudes_servicio_check;
 alter table solicitudes add constraint solicitudes_servicio_check
   check (servicio in ('prenatal', 'paternidad', 'adulto', 'identidad'));
 
+-- Constancia del consentimiento: qué versión del aviso de privacidad aceptó
+-- la persona y cuándo.
+alter table solicitudes add column if not exists aviso_version text;
+alter table solicitudes add column if not exists consentimiento_en timestamptz;
+
 -- Códigos de un solo uso para consultar un folio (segundo factor).
 create table if not exists codigos_acceso (
   id          bigint generated always as identity primary key,

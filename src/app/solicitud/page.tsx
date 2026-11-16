@@ -18,7 +18,11 @@ export default function RequestPage() {
         la toma de muestra.
       </p>
       <div className="mt-8">
-        <Suspense fallback={<div className="h-96 rounded-lg border border-line bg-surface" />}>
+        <Suspense
+          fallback={
+            <div className="h-96 rounded-lg border border-line bg-surface" />
+          }
+        >
           <RequestWizard />
         </Suspense>
       </div>

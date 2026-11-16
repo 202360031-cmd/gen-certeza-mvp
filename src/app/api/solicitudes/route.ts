@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       preferredDate: text(raw.preferredDate),
       notes: text(raw.notes),
       consent: raw.consent === true,
+      legitimacy: raw.legitimacy === true,
     };
     const modality = isModality(body.modality) ? body.modality : null;
 

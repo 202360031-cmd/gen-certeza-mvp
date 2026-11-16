@@ -23,7 +23,10 @@ export function StepContact({
   modality: Modality | null;
   errors: ContactErrors;
   minDate: string;
-  onContact: <K extends keyof ContactData>(key: K, value: ContactData[K]) => void;
+  onContact: <K extends keyof ContactData>(
+    key: K,
+    value: ContactData[K],
+  ) => void;
   onModality: (modality: Modality) => void;
 }) {
   return (
@@ -140,33 +143,83 @@ export function StepContact({
           </div>
         </div>
 
-        <div className="mt-6 rounded-md border border-line bg-paper p-4">
-          <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed">
-            <input
-              type="checkbox"
-              checked={contact.consent}
-              onChange={(e) => onContact("consent", e.target.checked)}
-              aria-invalid={errors.consent ? true : undefined}
-              aria-describedby={errors.consent ? "consent-error" : undefined}
-              className="mt-0.5 h-5 w-5 shrink-0 accent-navy"
-            />
-            <span>
-              Declaro que estoy legitimado para solicitar esta prueba y acepto
-              el tratamiento de mis datos conforme al{" "}
-              <Link href="/privacidad" target="_blank" className="text-navy underline">
-                aviso de privacidad
-              </Link>
-              . Entiendo que la toma de muestra requiere la identificación y el
-              consentimiento de los participantes o de su representante legal.
-            </span>
-          </label>
-          {errors.consent && (
-            <p id="consent-error" className="mt-2 text-sm text-alert">
-              {errors.consent}
-            </p>
-          )}
+        <div className="mt-6 space-y-4 rounded-md border border-line bg-paper p-4">
+          <ConsentCheck
+            id="consent"
+            checked={contact.consent}
+            error={errors.consent}
+            onChange={(v) => onContact("consent", v)}
+          >
+            He leído el{" "}
+            <Link
+              href="/privacidad"
+              target="_blank"
+              className="text-navy underline"
+            >
+              aviso de privacidad
+            </Link>{" "}
+            y otorgo mi consentimiento expreso para el tratamiento de mis datos
+            personales, incluidos los datos sensibles (muestras biológicas e
+            información genética), con el único fin de realizar la prueba
+            solicitada.
+          </ConsentCheck>
+          <ConsentCheck
+            id="legitimacy"
+            checked={contact.legitimacy}
+            error={errors.legitimacy}
+            onChange={(v) => onContact("legitimacy", v)}
+          >
+            Declaro que soy mayor de edad y que estoy legitimado para solicitar
+            esta prueba. Entiendo que cada participante, o quien ejerza la
+            patria potestad de un menor, deberá identificarse y firmar el{" "}
+            <Link
+              href="/consentimiento"
+              target="_blank"
+              className="text-navy underline"
+            >
+              consentimiento informado
+            </Link>{" "}
+            el día de la toma de muestra, y que no se procesan muestras
+            obtenidas sin conocimiento de la persona.
+          </ConsentCheck>
         </div>
       </fieldset>
+    </div>
+  );
+}
+
+function ConsentCheck({
+  id,
+  checked,
+  error,
+  onChange,
+  children,
+}: {
+  id: string;
+  checked: boolean;
+  error?: string;
+  onChange: (checked: boolean) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed">
+        <input
+          id={id}
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          className="mt-0.5 h-5 w-5 shrink-0 accent-navy"
+        />
+        <span>{children}</span>
+      </label>
+      {error && (
+        <p id={`${id}-error`} className="mt-2 pl-8 text-sm text-alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

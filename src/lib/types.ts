@@ -9,7 +9,10 @@ export interface ContactData {
   address: string;
   preferredDate: string;
   notes: string;
+  /** Aceptación del aviso de privacidad y del tratamiento de datos sensibles. */
   consent: boolean;
+  /** Declaración de estar legitimado para solicitar la prueba. */
+  legitimacy: boolean;
 }
 
 export interface ServiceRequest {

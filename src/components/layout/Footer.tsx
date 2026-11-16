@@ -6,12 +6,13 @@ import { Logo } from "./Logo";
 export function Footer() {
   return (
     <footer className="bg-navy-deep text-white/70">
-      <Container className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <Container className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-5">
         <div className="sm:col-span-2">
           <Logo inverted />
           <p className="mt-4 max-w-sm text-sm leading-relaxed">
-            Pruebas genéticas de paternidad, parentesco e identidad neonatal, con
-            cadena de custodia documentada y trato estrictamente confidencial.
+            Pruebas genéticas de paternidad, parentesco e identidad neonatal,
+            con cadena de custodia documentada y trato estrictamente
+            confidencial.
           </p>
         </div>
 
@@ -41,9 +42,25 @@ export function Footer() {
           <ul className="mt-4 space-y-2.5 text-sm">
             <li>Lunes a domingo, 8:00 a 20:00</li>
             <li>contacto@gencerteza.example</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="text-sm font-medium text-white">Legal</h2>
+          <ul className="mt-4 space-y-2.5 text-sm">
             <li>
               <Link href="/privacidad" className="hover:text-white">
                 Aviso de privacidad
+              </Link>
+            </li>
+            <li>
+              <Link href="/consentimiento" className="hover:text-white">
+                Consentimiento informado
+              </Link>
+            </li>
+            <li>
+              <Link href="/validez-juridica" className="hover:text-white">
+                Validez jurídica
               </Link>
             </li>
           </ul>
@@ -53,10 +70,9 @@ export function Footer() {
       <div className="border-t border-white/10">
         <Container className="py-6 text-xs leading-relaxed text-white/50">
           <p>
-            La admisibilidad de un dictamen genético depende de la legislación
-            y de la autoridad de cada jurisdicción. GenCerteza documenta la
-            cadena de custodia conforme a estándares periciales; no sustituye
-            la asesoría de un abogado.
+            La valoración de un dictamen genético corresponde a la autoridad que
+            conoce del caso. GenCerteza documenta la cadena de custodia conforme
+            a estándares periciales; no sustituye la asesoría de un abogado.
           </p>
           <p className="mt-2">
             © {2026} GenCerteza. Versión de demostración (MVP).

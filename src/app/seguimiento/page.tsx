@@ -17,7 +17,11 @@ export default function TrackingPage() {
         su correo.
       </p>
       <div className="mt-8">
-        <Suspense fallback={<div className="h-44 rounded-lg border border-line bg-surface" />}>
+        <Suspense
+          fallback={
+            <div className="h-44 rounded-lg border border-line bg-surface" />
+          }
+        >
           <TrackingPanel />
         </Suspense>
       </div>
