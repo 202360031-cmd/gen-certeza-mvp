@@ -47,8 +47,9 @@ export function StepConfirmation({ request }: { request: ServiceRequest }) {
         Guarde su folio de seguimiento
       </h2>
       <p className="mt-2 text-ink-soft">
-        Es la única referencia de su caso. No lo comparta: quien lo tenga podrá
-        consultar el estatus de la muestra.
+        Es la referencia de su caso; también la enviamos a su correo. Para
+        consultar el estatus se le pedirá, además, un código que llegará a ese
+        mismo correo.
       </p>
 
       <div className="mt-6 flex flex-col gap-4 rounded-lg border border-navy bg-navy-tint p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">

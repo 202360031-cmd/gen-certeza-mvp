@@ -1,146 +1,259 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { LockIcon } from "@/components/ui/Icons";
 import { formatDate } from "@/lib/format";
 import { FOLIO_PATTERN, normalizeFolio } from "@/lib/folio";
 import { MODALITIES, SERVICES } from "@/lib/services";
-import { findRequest } from "@/lib/storage";
-import {
-  DEMO_FOLIOS,
-  TRACKING_STAGES,
-  findDemoRecord,
-  recordFromRequest,
-} from "@/lib/tracking";
+import { TRACKING_STAGES } from "@/lib/tracking";
 import type { TrackingRecord } from "@/lib/types";
 import { StatusTimeline } from "./StatusTimeline";
 
-type Result =
-  | { kind: "idle" }
-  | { kind: "invalid" }
-  | { kind: "not-found"; folio: string }
-  | { kind: "found"; record: TrackingRecord };
+type Phase = "loading" | "folio" | "code" | "record";
 
-function lookup(raw: string): Result {
-  const folio = normalizeFolio(raw);
-  if (!FOLIO_PATTERN.test(folio)) return { kind: "invalid" };
-  const demo = findDemoRecord(folio);
-  if (demo) return { kind: "found", record: demo };
-  const request = findRequest(folio);
-  if (request) return { kind: "found", record: recordFromRequest(request) };
-  return { kind: "not-found", folio };
+const inputClass =
+  "block min-h-11 w-full flex-1 rounded-md border bg-surface px-3.5 font-mono text-base tracking-wider placeholder:text-ink-muted/60 focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy";
+
+async function post(url: string, body: object) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json().catch(() => ({}));
+  return { ok: response.ok, data };
 }
 
+const NETWORK_ERROR = "No hay conexión con el servidor. Intente de nuevo.";
+
 export function TrackingPanel() {
-  const router = useRouter();
   const folioParam = useSearchParams().get("folio") ?? "";
-  const [input, setInput] = useState(folioParam);
-  const [syncedParam, setSyncedParam] = useState(folioParam);
-  const [invalid, setInvalid] = useState(false);
+  const [phase, setPhase] = useState<Phase>("loading");
+  const [folio, setFolio] = useState(folioParam);
+  const [code, setCode] = useState("");
+  const [record, setRecord] = useState<TrackingRecord | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const codeRef = useRef<HTMLInputElement>(null);
 
-  // La URL es la fuente de verdad: permite enlazar y usar el botón Atrás.
-  if (syncedParam !== folioParam) {
-    setSyncedParam(folioParam);
-    setInput(folioParam);
-    setInvalid(false);
-  }
+  // Si hay una sesión de consulta vigente (cookie), muestra el estatus.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/seguimiento/sesion")
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const active: TrackingRecord | null = data.record ?? null;
+        // Un enlace a otro folio no debe mostrar el de la sesión anterior.
+        if (active && (!folioParam || normalizeFolio(folioParam) === active.folio)) {
+          setRecord(active);
+          setPhase("record");
+        } else {
+          setPhase("folio");
+        }
+      })
+      .catch(() => !cancelled && setPhase("folio"));
+    return () => {
+      cancelled = true;
+    };
+  }, [folioParam]);
 
-  // Este componente solo se renderiza en el cliente (useSearchParams bajo
-  // Suspense), por lo que la consulta puede leer localStorage directamente.
-  const result: Result = invalid
-    ? { kind: "invalid" }
-    : folioParam
-      ? lookup(folioParam)
-      : { kind: "idle" };
+  useEffect(() => {
+    if (phase === "code") codeRef.current?.focus();
+  }, [phase]);
 
-  function search(raw: string) {
-    const folio = normalizeFolio(raw);
-    const ok = FOLIO_PATTERN.test(folio);
-    setInvalid(!ok);
-    if (!ok) return;
-    setInput(folio);
-    if (folio !== folioParam) {
-      router.replace(`/seguimiento?folio=${folio}`, { scroll: false });
+  async function requestCode(event?: React.FormEvent) {
+    event?.preventDefault();
+    const normalized = normalizeFolio(folio);
+    if (!FOLIO_PATTERN.test(normalized)) {
+      setError("El folio tiene el formato GC- seguido de 5 dígitos, por ejemplo GC-88392.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const { ok, data } = await post("/api/seguimiento/codigo", { folio: normalized });
+      if (!ok) {
+        setError(data.error ?? "No pudimos enviar el código. Intente más tarde.");
+        return;
+      }
+      setFolio(normalized);
+      setCode("");
+      setNotice(
+        phase === "code" ? "Enviamos un código nuevo. El anterior ya no es válido." : null,
+      );
+      setPhase("code");
+    } catch {
+      setError(NETWORK_ERROR);
+    } finally {
+      setBusy(false);
     }
   }
 
-  const error =
-    result.kind === "invalid"
-      ? "El folio tiene el formato GC- seguido de 5 dígitos, por ejemplo GC-88392."
-      : result.kind === "not-found"
-        ? `No encontramos el folio ${result.folio}. Verifique los dígitos o contacte a su coordinador.`
-        : null;
+  async function verifyCode(event: React.FormEvent) {
+    event.preventDefault();
+    if (code.length !== 6) {
+      setError("Escriba los 6 dígitos del código.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const { ok, data } = await post("/api/seguimiento/verificar", { folio, code });
+      if (!ok || !data.record) {
+        setError(data.error ?? "No pudimos verificar el código.");
+        setCode("");
+        return;
+      }
+      setRecord(data.record);
+      setPhase("record");
+    } catch {
+      setError(NETWORK_ERROR);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function close() {
+    await fetch("/api/seguimiento/sesion", { method: "DELETE" }).catch(() => {});
+    setRecord(null);
+    setCode("");
+    setFolio("");
+    setError(null);
+    setNotice(null);
+    setPhase("folio");
+  }
+
+  if (phase === "loading") {
+    return <div className="h-44 rounded-lg border border-line bg-surface" aria-busy="true" />;
+  }
+
+  if (phase === "record" && record) {
+    return <RecordView record={record} onClose={close} />;
+  }
 
   return (
-    <div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          search(input);
-        }}
-        className="rounded-lg border border-line bg-surface p-5 sm:p-6"
-        noValidate
-      >
-        <label htmlFor="folio" className="text-sm font-medium">
-          Folio de Seguimiento Seguro
-        </label>
-        <div className="mt-1.5 flex flex-col gap-3 sm:flex-row">
-          <input
-            id="folio"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="GC-00000"
-            autoComplete="off"
-            autoCapitalize="characters"
-            spellCheck={false}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? "folio-error" : "folio-hint"}
-            className={`block min-h-11 w-full flex-1 rounded-md border bg-surface px-3.5 font-mono text-base tracking-wider uppercase placeholder:text-ink-muted/60 focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy ${error ? "border-alert" : "border-line-strong"}`}
-          />
-          <Button type="submit">Consultar estatus</Button>
-        </div>
-        <div aria-live="polite">
-          {error ? (
-            <p id="folio-error" className="mt-2 text-sm text-alert">
-              {error}
-            </p>
-          ) : (
-            <p id="folio-hint" className="mt-2 text-sm text-ink-muted">
-              Lo recibió al confirmar su solicitud.
-            </p>
-          )}
-        </div>
+    <div className="rounded-lg border border-line bg-surface p-5 sm:p-6">
+      <p className="text-sm text-ink-muted">
+        Paso {phase === "folio" ? 1 : 2} de 2
+      </p>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4 text-sm text-ink-muted">
-          <span>Folios de demostración:</span>
-          {DEMO_FOLIOS.map((folio) => (
+      {phase === "folio" ? (
+        <form onSubmit={requestCode} noValidate className="mt-2">
+          <label htmlFor="folio" className="font-medium">
+            Folio de Seguimiento Seguro
+          </label>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+            <input
+              id="folio"
+              value={folio}
+              onChange={(e) => setFolio(e.target.value)}
+              placeholder="GC-00000"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              aria-invalid={error ? true : undefined}
+              aria-describedby="folio-ayuda"
+              className={`${inputClass} uppercase ${error ? "border-alert" : "border-line-strong"}`}
+            />
+            <Button type="submit" disabled={busy}>
+              {busy ? "Enviando…" : "Enviar código"}
+            </Button>
+          </div>
+          <p
+            id="folio-ayuda"
+            aria-live="polite"
+            className={`mt-2 text-sm ${error ? "text-alert" : "text-ink-muted"}`}
+          >
+            {error ??
+              "Enviaremos un código de verificación al correo con el que registró su solicitud."}
+          </p>
+        </form>
+      ) : (
+        <form onSubmit={verifyCode} noValidate className="mt-2">
+          <label htmlFor="codigo" className="font-medium">
+            Código de verificación
+          </label>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+            Si el folio <span className="font-mono">{folio}</span> existe,
+            enviamos un código de 6 dígitos al correo registrado. Vence en 10
+            minutos.
+          </p>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+            <input
+              id="codigo"
+              ref={codeRef}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="000000"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              aria-invalid={error ? true : undefined}
+              aria-describedby="codigo-ayuda"
+              className={`${inputClass} sm:max-w-48 ${error ? "border-alert" : "border-line-strong"}`}
+            />
+            <Button type="submit" disabled={busy}>
+              {busy ? "Verificando…" : "Ver estatus"}
+            </Button>
+          </div>
+          <p
+            id="codigo-ayuda"
+            aria-live="polite"
+            className={`mt-2 min-h-5 text-sm ${error ? "text-alert" : "text-clinic"}`}
+          >
+            {error ?? notice}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-4 text-sm">
             <button
-              key={folio}
               type="button"
-              onClick={() => search(folio)}
-              className="rounded border border-line-strong px-2.5 py-1.5 font-mono text-xs text-ink-soft hover:border-navy hover:text-navy"
+              disabled={busy}
+              onClick={() => requestCode()}
+              className="py-1 text-navy underline disabled:opacity-50"
             >
-              {folio}
+              Reenviar código
             </button>
-          ))}
-        </div>
-      </form>
+            <button
+              type="button"
+              onClick={() => {
+                setPhase("folio");
+                setError(null);
+                setNotice(null);
+              }}
+              className="py-1 text-ink-soft underline"
+            >
+              Usar otro folio
+            </button>
+          </div>
+        </form>
+      )}
 
-      <div aria-live="polite">
-        {result.kind === "found" && <RecordView record={result.record} />}
-      </div>
+      <p className="mt-5 flex items-start gap-2 border-t border-line pt-4 text-sm text-ink-muted">
+        <LockIcon className="mt-0.5 h-4 w-4 shrink-0 text-clinic" />
+        El folio por sí solo no da acceso: la consulta requiere el código
+        enviado a su correo y los intentos están limitados.
+      </p>
     </div>
   );
 }
 
-function RecordView({ record }: { record: TrackingRecord }) {
+function RecordView({
+  record,
+  onClose,
+}: {
+  record: TrackingRecord;
+  onClose: () => void;
+}) {
   const service = SERVICES[record.service];
   const stage = TRACKING_STAGES[record.currentStage];
   const ready = record.currentStage === TRACKING_STAGES.length - 1;
 
   return (
-    <section className="mt-6 rounded-lg border border-line bg-surface">
+    <section className="rounded-lg border border-line bg-surface" aria-live="polite">
       <header className="border-b border-line p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -154,7 +267,9 @@ function RecordView({ record }: { record: TrackingRecord }) {
           <span
             className={`rounded px-2.5 py-1 text-xs font-medium ${ready ? "bg-clinic-tint text-clinic" : "bg-navy-tint text-navy"}`}
           >
-            {ready ? "Concluido" : `Etapa ${record.currentStage + 1} de ${TRACKING_STAGES.length}`}
+            {ready
+              ? "Concluido"
+              : `Etapa ${record.currentStage + 1} de ${TRACKING_STAGES.length}`}
           </span>
         </div>
 
@@ -186,35 +301,17 @@ function RecordView({ record }: { record: TrackingRecord }) {
         <StatusTimeline record={record} />
       </div>
 
-      <footer className="border-t border-line bg-paper/60 p-5 text-sm leading-relaxed text-ink-soft sm:p-6">
-        {ready ? (
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="max-w-md">
-              Por seguridad, el dictamen se entrega únicamente al solicitante,
-              previa verificación de identidad.
-            </p>
-            <Button disabled title="No disponible en la versión de demostración">
-              Descargar dictamen
-            </Button>
-          </div>
-        ) : (
-          <p>
-            Por confidencialidad, aquí solo se muestra el estatus. El resultado
-            nunca se publica en línea sin verificar su identidad.
-          </p>
-        )}
+      <footer className="flex flex-col gap-4 border-t border-line bg-paper/60 p-5 text-sm leading-relaxed text-ink-soft sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <p className="max-w-md">
+          {ready
+            ? "Por seguridad, el dictamen se entrega únicamente al solicitante, previa verificación de identidad. Su coordinador le contactará."
+            : "Aquí solo se muestra el estatus. El resultado nunca se publica en línea."}{" "}
+          La sesión se cierra sola a los 15 minutos.
+        </p>
+        <Button variant="secondary" onClick={onClose}>
+          Cerrar consulta
+        </Button>
       </footer>
     </section>
-  );
-}
-
-export function TrackingEmptyHelp() {
-  return (
-    <p className="mt-6 text-sm text-ink-muted">
-      ¿Aún no tiene folio?{" "}
-      <ButtonLink href="/solicitud" variant="ghost" className="!min-h-0 !px-0 underline">
-        Solicite su cita
-      </ButtonLink>
-    </p>
   );
 }

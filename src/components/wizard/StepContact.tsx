@@ -2,12 +2,9 @@ import Link from "next/link";
 import { ClinicIcon, HomeIcon } from "@/components/ui/Icons";
 import { MODALITIES } from "@/lib/services";
 import type { ContactData, Modality } from "@/lib/types";
+import type { ContactErrors } from "@/lib/validation";
 import { Field } from "./Field";
 import { OptionCard } from "./OptionCard";
-
-export type ContactErrors = Partial<
-  Record<keyof ContactData | "modality", string>
->;
 
 const ICONS: Record<Modality, React.ReactNode> = {
   domicilio: <HomeIcon />,
@@ -137,6 +134,7 @@ export function StepContact({
               multiline
               placeholder="Por ejemplo: horario en que prefiere recibir la llamada."
               value={contact.notes}
+              error={errors.notes}
               onValue={(v) => onContact("notes", v)}
             />
           </div>
