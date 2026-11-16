@@ -6,7 +6,8 @@ import "server-only";
  */
 async function send(to: string, subject: string, text: string): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
+  // Tolera comillas pegadas por error alrededor del remitente.
+  const from = process.env.EMAIL_FROM?.trim().replace(/^["']|["']$/g, "");
 
   if (!apiKey || !from) {
     if (process.env.NODE_ENV === "production") {
@@ -25,7 +26,15 @@ async function send(to: string, subject: string, text: string): Promise<void> {
     body: JSON.stringify({ from, to, subject, text }),
   });
   if (!response.ok) {
-    throw new Error(`El proveedor de correo respondió ${response.status}.`);
+    // El detalle del proveedor describe el fallo de configuración (remitente,
+    // dominio, clave); no incluye el contenido del mensaje.
+    const detail = await response
+      .json()
+      .then((body) => body?.message ?? body?.name ?? "")
+      .catch(() => "");
+    throw new Error(
+      `El proveedor de correo respondió ${response.status}. ${detail}`.trim(),
+    );
   }
 }
 
