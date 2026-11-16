@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon } from "@/components/ui/Icons";
+import { SERVICES, findVariant, isServiceId } from "@/lib/services";
 import type {
   ContactData,
   Modality,
@@ -31,13 +32,22 @@ const EMPTY_CONTACT: ContactData = {
   consent: false,
 };
 
+/** Variante de la URL si es válida; si el servicio solo tiene una, esa. */
+function defaultVariant(service: ServiceId, wanted?: string | null) {
+  const { variants } = SERVICES[service];
+  if (findVariant(service, wanted)) return wanted as string;
+  return variants.length === 1 ? variants[0].id : null;
+}
+
 export function RequestWizard() {
-  const preselected = useSearchParams().get("servicio");
+  const params = useSearchParams();
+  const initialService = isServiceId(params.get("servicio"))
+    ? (params.get("servicio") as ServiceId)
+    : null;
   const [step, setStep] = useState(1);
-  const [service, setService] = useState<ServiceId | null>(
-    preselected === "paternidad" || preselected === "identidad"
-      ? preselected
-      : null,
+  const [service, setService] = useState<ServiceId | null>(initialService);
+  const [variant, setVariant] = useState<string | null>(
+    initialService ? defaultVariant(initialService, params.get("variante")) : null,
   );
   const [modality, setModality] = useState<Modality | null>(null);
   const [contact, setContact] = useState<ContactData>(EMPTY_CONTACT);
@@ -72,21 +82,23 @@ export function RequestWizard() {
   function focusFirstError(found: ContactErrors) {
     const first = Object.keys(found)[0];
     if (!first) return;
-    const id = first === "modality" || first === "service" ? "panel-solicitud" : first;
+    const id = ["modality", "service", "variant"].includes(first)
+      ? "panel-solicitud"
+      : first;
     document.getElementById(id)?.focus();
   }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (step === 1) {
-      if (service) setStep(2);
+      if (service && variant) setStep(2);
       return;
     }
     if (sending) return;
 
     const found = validateRequest(contact, modality);
     setErrors(found);
-    if (Object.keys(found).length || !service || !modality) {
+    if (Object.keys(found).length || !service || !variant || !modality) {
       focusFirstError(found);
       return;
     }
@@ -97,7 +109,7 @@ export function RequestWizard() {
       const response = await fetch("/api/solicitudes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ service, modality, contact }),
+        body: JSON.stringify({ service, variant, modality, contact }),
       });
       const data = await response.json().catch(() => ({}));
 
@@ -117,6 +129,7 @@ export function RequestWizard() {
       setRequest({
         folio: data.folio,
         service,
+        variant,
         modality,
         contact,
         createdAt: new Date().toISOString(),
@@ -146,7 +159,15 @@ export function RequestWizard() {
         ) : (
           <form onSubmit={submit} noValidate>
             {step === 1 ? (
-              <StepService value={service} onChange={setService} />
+              <StepService
+                service={service}
+                variant={variant}
+                onService={(next) => {
+                  setService(next);
+                  setVariant(defaultVariant(next));
+                }}
+                onVariant={setVariant}
+              />
             ) : (
               <StepContact
                 contact={contact}
@@ -185,7 +206,7 @@ export function RequestWizard() {
               )}
               <Button
                 type="submit"
-                disabled={(step === 1 && !service) || sending}
+                disabled={(step === 1 && !(service && variant)) || sending}
               >
                 {step === 1
                   ? "Continuar"

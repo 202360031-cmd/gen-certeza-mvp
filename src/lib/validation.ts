@@ -1,7 +1,7 @@
-import type { ContactData, Modality, ServiceId } from "./types";
+import type { ContactData, Modality } from "./types";
 
 export type ContactErrors = Partial<
-  Record<keyof ContactData | "modality" | "service", string>
+  Record<keyof ContactData | "modality" | "service" | "variant", string>
 >;
 
 /** Fecha local de hoy en formato YYYY-MM-DD. */
@@ -51,7 +51,5 @@ export function validateRequest(
   return errors;
 }
 
-export const isServiceId = (v: unknown): v is ServiceId =>
-  v === "paternidad" || v === "identidad";
 export const isModality = (v: unknown): v is Modality =>
   v === "domicilio" || v === "clinica";

@@ -3,7 +3,8 @@
 
 create table if not exists solicitudes (
   folio              text primary key check (folio ~ '^GC-[0-9]{5}$'),
-  servicio           text not null check (servicio in ('paternidad', 'identidad')),
+  servicio           text not null,
+  variante           text not null default 'unica',
   modalidad          text not null check (modalidad in ('domicilio', 'clinica')),
   -- Datos personales (nombre, correo, teléfono, domicilio, notas) cifrados
   -- en la aplicación con AES-256-GCM. La base de datos nunca los ve en claro.
@@ -13,6 +14,13 @@ create table if not exists solicitudes (
   entrega_estimada   date,
   creada_en          timestamptz not null default now()
 );
+
+-- Cambios posteriores a la primera versión (seguros de repetir).
+alter table solicitudes
+  add column if not exists variante text not null default 'unica';
+alter table solicitudes drop constraint if exists solicitudes_servicio_check;
+alter table solicitudes add constraint solicitudes_servicio_check
+  check (servicio in ('prenatal', 'paternidad', 'adulto', 'identidad'));
 
 -- Códigos de un solo uso para consultar un folio (segundo factor).
 create table if not exists codigos_acceso (

@@ -34,7 +34,7 @@ imprime en la consola del servidor.
 | Ruta           | Descripción                                             |
 | -------------- | ------------------------------------------------------- |
 | `/`            | Landing: servicios, cadena de custodia, confidencialidad |
-| `/solicitud`   | Wizard de 3 pasos (acepta `?servicio=paternidad\|identidad`) |
+| `/solicitud`   | Wizard de 3 pasos (acepta `?servicio=` y `?variante=`) |
 | `/seguimiento` | Consulta de estatus: folio + código por correo           |
 | `/privacidad`  | Aviso de privacidad (texto provisional)                 |
 
@@ -57,6 +57,16 @@ scripts/migrate.mjs      # Aplica el esquema
 ```
 
 Los colores y tipografías se definen como tokens en `src/app/globals.css`.
+
+## Catálogo de servicios y precios
+
+Todo el catálogo vive en `src/lib/services.ts`: servicios, variantes, plazos y
+precios. Para fijar un precio, cambie `price: null` por el importe en pesos
+(p. ej. `price: 8500`); mientras sea `null` se muestra "Precio por confirmar".
+La landing, el formulario y la API leen de ese archivo.
+
+Si agrega un servicio nuevo, añádalo también a la restricción
+`solicitudes_servicio_check` de `db/schema.sql` y ejecute `npm run db:migrate`.
 
 ## Seguridad
 

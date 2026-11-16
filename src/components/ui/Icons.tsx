@@ -60,12 +60,26 @@ export const ClinicIcon = (p: IconProps) => (
 
 export const CheckIcon = (p: IconProps) => (
   <Svg {...p}>
-    <path d="m5 12.5 4.5 4.500L19 7.5" />
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
   </Svg>
 );
 
 export const ArrowRightIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M5 12h14M13 6l6 6-6 6" />
+  </Svg>
+);
+
+export const DropIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3.5c3 3.6 5.5 6.6 5.5 10a5.5 5.5 0 0 1-11 0c0-3.4 2.5-6.4 5.5-10Z" />
+  </Svg>
+);
+
+export const PeopleIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="9" cy="8" r="3" />
+    <path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" />
+    <path d="M15.5 5.5a3 3 0 0 1 0 5.5M17 14.5c2 .6 3.5 2.2 3.5 4.5" />
   </Svg>
 );

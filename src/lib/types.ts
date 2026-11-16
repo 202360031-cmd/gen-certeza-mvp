@@ -1,4 +1,4 @@
-export type ServiceId = "paternidad" | "identidad";
+export type ServiceId = "prenatal" | "paternidad" | "adulto" | "identidad";
 export type Modality = "domicilio" | "clinica";
 
 export interface ContactData {
@@ -15,6 +15,7 @@ export interface ContactData {
 export interface ServiceRequest {
   folio: string;
   service: ServiceId;
+  variant: string;
   modality: Modality;
   contact: ContactData;
   createdAt: string;
@@ -31,6 +32,7 @@ export interface TrackingStage {
 export interface TrackingRecord {
   folio: string;
   service: ServiceId;
+  variant: string;
   modality: Modality;
   /** Índice de la etapa actual dentro de TRACKING_STAGES */
   currentStage: number;

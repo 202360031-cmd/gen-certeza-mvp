@@ -3,9 +3,9 @@ import { Container } from "@/components/ui/Container";
 import { ArrowRightIcon } from "@/components/ui/Icons";
 
 const FACTS = [
-  { value: "48–72 h", label: "Verificación de identidad neonatal" },
-  { value: "5–7 días", label: "Dictamen de paternidad" },
-  { value: "100 %", label: "Muestras con precinto y acta de custodia" },
+  { value: "Desde la semana 7", label: "Paternidad prenatal no invasiva" },
+  { value: "Desde el día 1", label: "Paternidad e identidad neonatal" },
+  { value: "A cualquier edad", label: "Pruebas informativas y legales" },
 ];
 
 export function Hero() {
@@ -13,15 +13,16 @@ export function Hero() {
     <section className="border-b border-line">
       <Container className="py-16 sm:py-24">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-clinic">
-          Genética forense · Filiación e identidad neonatal
+          Genética forense · Paternidad, parentesco e identidad
         </p>
         <h1 className="mt-5 max-w-3xl font-serif text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-          Certeza sobre el vínculo con su hijo, desde los primeros días.
+          Certeza sobre el vínculo biológico, en cada etapa de la vida.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-soft">
-          Pruebas de paternidad neonatales y verificación de identidad del
-          recién nacido. Cada muestra se toma, sella y analiza bajo cadena de
-          custodia documentada, con la discreción que el asunto exige.
+          Pruebas de paternidad prenatales, neonatales y en vida adulta, y
+          verificación de identidad del recién nacido. Las pruebas con validez
+          legal se realizan bajo cadena de custodia documentada; todas, con la
+          discreción que el asunto exige.
         </p>
 
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">

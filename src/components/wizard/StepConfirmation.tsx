@@ -4,12 +4,19 @@ import { useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { CheckIcon } from "@/components/ui/Icons";
 import { formatDate } from "@/lib/format";
-import { MODALITIES, SERVICES } from "@/lib/services";
+import {
+  MODALITIES,
+  SERVICES,
+  findVariant,
+  formatPrice,
+  serviceLabel,
+} from "@/lib/services";
 import type { ServiceRequest } from "@/lib/types";
 
 export function StepConfirmation({ request }: { request: ServiceRequest }) {
   const [copied, setCopied] = useState(false);
   const service = SERVICES[request.service];
+  const variant = findVariant(request.service, request.variant);
 
   async function copyFolio() {
     try {
@@ -22,7 +29,13 @@ export function StepConfirmation({ request }: { request: ServiceRequest }) {
   }
 
   const summary = [
-    ["Servicio", service.shortName],
+    ["Servicio", serviceLabel(request.service, request.variant)],
+    ...(variant
+      ? [
+          ["Precio", formatPrice(variant.price)],
+          ["Entrega de resultado", variant.turnaround],
+        ]
+      : []),
     ["Modalidad", MODALITIES[request.modality].name],
     ["Contacto", `${request.contact.email} · ${request.contact.phone}`],
     ["Ciudad", request.contact.city],

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
+import { SERVICE_LIST } from "@/lib/services";
 import { Logo } from "./Logo";
 
 export function Footer() {
@@ -9,24 +10,24 @@ export function Footer() {
         <div className="sm:col-span-2">
           <Logo inverted />
           <p className="mt-4 max-w-sm text-sm leading-relaxed">
-            Pruebas genéticas de filiación e identidad neonatal con cadena de
-            custodia documentada y trato estrictamente confidencial.
+            Pruebas genéticas de paternidad, parentesco e identidad neonatal, con
+            cadena de custodia documentada y trato estrictamente confidencial.
           </p>
         </div>
 
         <div>
           <h2 className="text-sm font-medium text-white">Servicios</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
-            <li>
-              <Link href="/solicitud?servicio=paternidad" className="hover:text-white">
-                Prueba de paternidad neonatal
-              </Link>
-            </li>
-            <li>
-              <Link href="/solicitud?servicio=identidad" className="hover:text-white">
-                Verificación de identidad neonatal
-              </Link>
-            </li>
+            {SERVICE_LIST.map((service) => (
+              <li key={service.id}>
+                <Link
+                  href={`/solicitud?servicio=${service.id}`}
+                  className="hover:text-white"
+                >
+                  {service.name}
+                </Link>
+              </li>
+            ))}
             <li>
               <Link href="/seguimiento" className="hover:text-white">
                 Consultar folio

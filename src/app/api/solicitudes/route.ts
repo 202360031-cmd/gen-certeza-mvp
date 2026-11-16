@@ -4,7 +4,8 @@ import { json, readJson, serverError, tooMany } from "@/lib/server/http";
 import { allow, clientKey } from "@/lib/server/rate-limit";
 import { createRequest } from "@/lib/server/requests";
 import type { ContactData } from "@/lib/types";
-import { isModality, isServiceId, validateRequest } from "@/lib/validation";
+import { findVariant, isServiceId } from "@/lib/services";
+import { isModality, validateRequest } from "@/lib/validation";
 
 const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
@@ -30,13 +31,16 @@ export async function POST(request: Request) {
     // Un día de margen: el "hoy" del cliente puede ir por detrás del servidor.
     const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
     const errors = validateRequest(contact, modality, yesterday);
-    if (!isServiceId(body.service)) errors.service = "Seleccione un servicio.";
-    if (Object.keys(errors).length || !modality || !isServiceId(body.service)) {
+    const service = isServiceId(body.service) ? body.service : null;
+    const variant = service ? findVariant(service, body.variant) : null;
+    if (!service) errors.service = "Seleccione un servicio.";
+    else if (!variant) errors.variant = "Seleccione una opción del servicio.";
+    if (Object.keys(errors).length || !modality || !service || !variant) {
       return json({ error: "Revise los datos del formulario.", errors }, 422);
     }
     if (modality === "clinica") contact.address = "";
 
-    const folio = await createRequest(body.service, modality, contact);
+    const folio = await createRequest(service, variant.id, modality, contact);
 
     after(() =>
       sendRequestConfirmation(contact.email, folio).catch((error) =>

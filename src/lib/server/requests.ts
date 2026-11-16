@@ -13,6 +13,7 @@ import { db } from "./db";
 interface Row {
   folio: string;
   servicio: ServiceId;
+  variante: string;
   modalidad: Modality;
   etapa: number;
   fechas_etapas: string[];
@@ -22,6 +23,7 @@ interface Row {
 const toRecord = (row: Row): TrackingRecord => ({
   folio: row.folio,
   service: row.servicio,
+  variant: row.variante,
   modality: row.modalidad,
   currentStage: row.etapa,
   stageDates: row.fechas_etapas,
@@ -33,6 +35,7 @@ const newFolio = () => `GC-${randomInt(10000, 100000)}`;
 /** Guarda la solicitud con los datos de contacto cifrados. Devuelve el folio. */
 export async function createRequest(
   service: ServiceId,
+  variant: string,
   modality: Modality,
   contact: ContactData,
 ): Promise<string> {
@@ -40,9 +43,9 @@ export async function createRequest(
   for (let attempt = 0; attempt < 8; attempt++) {
     const folio = newFolio();
     const inserted = await sql`
-      insert into solicitudes (folio, servicio, modalidad, contacto_cifrado, fechas_etapas)
+      insert into solicitudes (folio, servicio, variante, modalidad, contacto_cifrado, fechas_etapas)
       values (
-        ${folio}, ${service}, ${modality},
+        ${folio}, ${service}, ${variant}, ${modality},
         ${encrypt(JSON.stringify(contact), folio)},
         ${sql.json([new Date().toISOString()])}
       )
@@ -59,7 +62,7 @@ export async function getTrackingRecord(
   folio: string,
 ): Promise<TrackingRecord | null> {
   const [row] = await db()<Row[]>`
-    select folio, servicio, modalidad, etapa, fechas_etapas,
+    select folio, servicio, variante, modalidad, etapa, fechas_etapas,
            to_char(entrega_estimada, 'YYYY-MM-DD') as entrega_estimada
     from solicitudes where folio = ${folio}
   `;

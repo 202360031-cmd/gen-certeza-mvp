@@ -3,6 +3,14 @@ import { SectionHeading } from "./SectionHeading";
 
 const QUESTIONS = [
   {
+    q: "¿La prueba prenatal implica algún riesgo para el embarazo?",
+    a: "No. Se analiza el ADN fetal que circula en la sangre de la madre, obtenida con una extracción de sangre convencional del brazo. No hay amniocentesis ni contacto con el feto. Se requieren al menos 7 semanas de gestación.",
+  },
+  {
+    q: "¿Qué diferencia hay entre una prueba informativa y una legal?",
+    a: "El análisis genético es el mismo. En la prueba legal, además, se identifica a cada participante y las muestras se sellan bajo cadena de custodia, lo que permite presentar el dictamen ante una autoridad. La informativa es solo para conocimiento personal.",
+  },
+  {
     q: "¿Desde qué edad puede tomarse la muestra a un recién nacido?",
     a: "Desde el primer día de vida. Se utiliza un hisopo bucal suave; no hay punción ni molestia para el bebé.",
   },

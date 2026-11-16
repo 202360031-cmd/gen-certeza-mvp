@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { LockIcon } from "@/components/ui/Icons";
 import { formatDate } from "@/lib/format";
 import { FOLIO_PATTERN, normalizeFolio } from "@/lib/folio";
-import { MODALITIES, SERVICES } from "@/lib/services";
+import { MODALITIES, serviceLabel } from "@/lib/services";
 import { TRACKING_STAGES } from "@/lib/tracking";
 import type { TrackingRecord } from "@/lib/types";
 import { StatusTimeline } from "./StatusTimeline";
@@ -248,7 +248,6 @@ function RecordView({
   record: TrackingRecord;
   onClose: () => void;
 }) {
-  const service = SERVICES[record.service];
   const stage = TRACKING_STAGES[record.currentStage];
   const ready = record.currentStage === TRACKING_STAGES.length - 1;
 
@@ -276,7 +275,8 @@ function RecordView({
         <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-3">
           <div>
             <dt className="text-ink-muted">Servicio</dt>
-            <dd className="mt-0.5 font-medium">{service.shortName}</dd>
+            <dd className="mt-0.5 font-medium">{serviceLabel(record.service, record.variant)}
+            </dd>
           </div>
           <div>
             <dt className="text-ink-muted">Modalidad</dt>

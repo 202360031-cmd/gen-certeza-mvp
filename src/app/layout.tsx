@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s · GenCerteza",
   },
   description:
-    "Pruebas de paternidad neonatales y verificación de identidad del recién nacido, con cadena de custodia documentada y absoluta discreción.",
+    "Pruebas de paternidad prenatales, neonatales y en vida adulta, y verificación de identidad del recién nacido, con cadena de custodia documentada y absoluta discreción.",
 };
 
 export default function RootLayout({
